@@ -26,13 +26,125 @@
           <span>Email :</span>
           <input type="email" name="email" id="email">
         </div>
-        <button id="add-btn">Add</button>
+        <button id="add-btn" onclick="addUser()">Add</button>
       </div>
     </div>
   </div>
 </body>
 
 <script>
-  
+  let books = []
+  let users = []
+
+  const getBooks = () => {
+    fetch("http://127.0.0.1:8000/playground/books/")
+      .then(resp => {
+        if (!resp.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return resp.json()
+      })
+      .then(data => {
+        books = data.data
+        console.log("books", books)
+        const parent = document.getElementById("list")
+        books.forEach((e, index) => {
+          const text = document.createElement('span')
+          text.textContent = (index + 1) + ". " + e.title + " (" + e.year + ")"
+          parent.appendChild(text)
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  const getUsers = () => {
+    users = []
+    fetch("http://127.0.0.1:8000/playground/user/")
+      .then(resp => {
+        return resp.json()
+      })
+      .then(data => {
+        users = data.data
+        console.log("userrrr", users);
+        const parent = document.getElementById("list_user")
+        
+        users.forEach((e, index) => {
+          const div = document.createElement('div')
+          div.style = "display: flex; gap: 12px;"
+          const text = document.createElement('span')
+          const btnEdit = document.createElement('button')
+          const btnDelete = document.createElement('button')
+          btnEdit.textContent = "edit"
+          btnDelete.textContent = "delete"
+          btnEdit.onclick = () => {
+            editUser(e._id)
+          }
+          btnDelete.onclick = () => {
+            deleteUser(e._id)
+          }
+          text.textContent = (index + 1) + ". " + e.name + " (" + e.email + ")"
+          div.append(text, btnEdit, btnDelete)
+          parent.append(div)
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  const addUser = () => {
+    const form_name = document.getElementById("nama").value
+    const form_email = document.getElementById("email").value
+    console.log("clickk", form_name, form_email);
+    fetch("http://127.0.0.1:8000/playground/user/", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+      body: JSON.stringify({
+        name: form_name,
+        email: form_email
+      }),
+      credentials: 'include',
+    })
+      .then(response => response.json())
+      .catch(error => {
+        console.error('Error:', error);
+      });
+
+    const parent = document.getElementById("list_user")
+    setTimeout(() => {
+      while (parent.hasChildNodes()) {
+        parent.removeChild(parent.firstChild)
+      }
+      getUsers()
+    }, 1000);
+  }
+
+  const editUser = (e) => {
+    console.log("editt nih", e);
+  }
+
+  const deleteUser = (e) => {
+    console.log("delete nih", e);
+    fetch(`http://127.0.0.1:8000/playground/user/?id=${e}`, {
+      method: "DELETE",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+      // credentials: 'include',
+    })
+      .then(response => response.json())
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    getBooks();
+    getUsers();
+  })
 </script>
 </html>
