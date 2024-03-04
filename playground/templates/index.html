@@ -26,7 +26,11 @@
           <span>Email :</span>
           <input type="email" name="email" id="email">
         </div>
-        <button id="add-btn" onclick="addUser()">Add</button>
+        <div style="display: flex; gap: 16px;">
+          <button id="add-btn" onclick="addUser()">Add</button>
+          <button style="display: none;" id="cancel-btn" onclick="clickCancel()">Cancel</button>
+          <button style="display: none;" id="edit-btn" onclick="editUser()">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -35,6 +39,7 @@
 <script>
   let books = []
   let users = []
+  let id_edit = ""
 
   const getBooks = () => {
     fetch("http://127.0.0.1:8000/playground/books/")
@@ -79,7 +84,7 @@
           btnEdit.textContent = "edit"
           btnDelete.textContent = "delete"
           btnEdit.onclick = () => {
-            editUser(e._id)
+            clickEdit({ id: e._id, name: e.name, email: e.email })
           }
           btnDelete.onclick = () => {
             deleteUser(e._id)
@@ -98,16 +103,73 @@
     const form_name = document.getElementById("nama").value
     const form_email = document.getElementById("email").value
     console.log("clickk", form_name, form_email);
-    fetch("http://127.0.0.1:8000/playground/user/", {
-      method: "POST",
+    if (form_name != "" && form_email != "") {
+      fetch("http://127.0.0.1:8000/playground/user/", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          name: form_name,
+          email: form_email
+        }),
+        credentials: 'include',
+      })
+        .then(response => response.json())
+        .catch(error => {
+          console.error('Error:', error);
+        });
+  
+      const parent = document.getElementById("list_user")
+      setTimeout(() => {
+        while (parent.hasChildNodes()) {
+          parent.removeChild(parent.firstChild)
+        }
+        clickCancel()
+        getUsers()
+      }, 1000);
+    }
+  }
+
+  const editUser = () => {
+    const form_name = document.getElementById("nama").value
+    const form_email = document.getElementById("email").value
+    console.log("payy", id_edit);
+    if (form_name != "" && form_email != "") {
+      fetch(`http://127.0.0.1:8000/playground/user/?id=${id_edit}`, {
+        method: "PUT",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          name: form_name,
+          email: form_email
+        }),
+        credentials: 'include',
+      })
+        .then(response => response.json())
+        .catch(error => {
+          console.error('Error:', error);
+        });
+  
+      const parent = document.getElementById("list_user")
+      setTimeout(() => {
+        while (parent.hasChildNodes()) {
+          parent.removeChild(parent.firstChild)
+        }
+        clickCancel()
+        getUsers()
+      }, 1000);
+    }
+  }
+
+  const deleteUser = (e) => {
+    console.log("delete nih", e);
+    fetch(`http://127.0.0.1:8000/playground/user/?id=${e}`, {
+      method: "DELETE",
       headers: {
         "Content-type": "application/json; charset=UTF-8",
       },
-      body: JSON.stringify({
-        name: form_name,
-        email: form_email
-      }),
-      credentials: 'include',
     })
       .then(response => response.json())
       .catch(error => {
@@ -123,23 +185,33 @@
     }, 1000);
   }
 
-  const editUser = (e) => {
+  const clickEdit = (e) => {
+    id_edit = e.id
+    const btnAdd = document.getElementById("add-btn")
+    const btnEdit = document.getElementById("edit-btn")
+    const btnCancel = document.getElementById("cancel-btn")
+    btnAdd.style = "display: none;"
+    btnEdit.style = "display: block;"
+    btnCancel.style = "display: block;"
     console.log("editt nih", e);
+
+    const form_name = document.getElementById("nama")
+    const form_email = document.getElementById("email")
+    form_name.value = e.name
+    form_email.value = e.email
   }
 
-  const deleteUser = (e) => {
-    console.log("delete nih", e);
-    fetch(`http://127.0.0.1:8000/playground/user/?id=${e}`, {
-      method: "DELETE",
-      headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
-      // credentials: 'include',
-    })
-      .then(response => response.json())
-      .catch(error => {
-        console.error('Error:', error);
-      });
+  const clickCancel = () => {
+    id_edit = ""
+    const btnAdd = document.getElementById("add-btn")
+    const btnEdit = document.getElementById("edit-btn")
+    const btnCancel = document.getElementById("cancel-btn")
+    btnAdd.style = "display: block;"
+    btnEdit.style = "display: none;"
+    btnCancel.style = "display: none;"
+
+    document.getElementById("nama").value = ""
+    document.getElementById("email").value = ""
   }
 
   document.addEventListener("DOMContentLoaded", () => {

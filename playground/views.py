@@ -59,10 +59,20 @@ def users(request):
             message = "Failed to add"
     elif request.method == "PUT":
         user_data = JSONParser().parse(request)
+        user_id = request.GET.get("id")
+        user_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "name": user_data["name"],
+                    "email": user_data["email"],
+                    "updatedAt": datetime.now(),
+                }
+            },
+        )
     elif request.method == "DELETE":
-        # user_data = JSONParser().parse(request)
-        # user_collection.delete_one({""})
-        print("delete id", request.GET.get("id"))
+        user_id = request.GET.get("id")
+        user_collection.delete_one({"_id": ObjectId(user_id)})
 
     response = JsonResponse(
         {"status": HttpResponse.status_code, "message": message, "data": data}
